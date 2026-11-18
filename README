@@ -1,0 +1,9 @@
+jvi (just vi) is a 900 loc vi implementation. 
+	note:
+		The only way to return from insert state to normal state is by using Ctrl+c
+	compilation:
+		cc -std=c89 -O2 -o jvi main.c
+	installation:
+		install -m 755 jvi /usr/local/bin/jvi
+		OR
+		install -m 755 jvi /usr/local/bin/vi
