@@ -1,8 +1,6 @@
 /*
- * tvi - tiny vi clone.  C89 + POSIX termios.
- *
  * Build: cc -std=c89 -O2 -o jvi main.c
- * Usage: tvi [file]
+ * Usage: jvi [file]
  *
  * Normal mode
  *   move    h j k l, 0 ^ $, w b, gg G (3G = line 3), /pat, n
