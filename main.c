@@ -33,7 +33,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <errno.h>
 #include <unistd.h>
 #include <termios.h>
 #include <sys/ioctl.h>
@@ -165,14 +164,13 @@ static void term_raw(void)
 /* read one raw byte (no escape-sequence parsing at all) */
 static int read_key(void)
 {
-	char c;
-	int n;
+        int c = getchar();
 
-	while ((n = (int)read(0, &c, 1)) != 1) {
-		if (n == 0) exit(0);			/* stdin closed */
-		if (errno != EAGAIN && errno != EINTR) die("read");
-	}
-	return (unsigned char)c;
+        if (c != EOF) return c;
+        if (feof(stdin)) exit(0);       /* stdin closed */
+        clearerr(stdin);                /* needed if using VMIN=0 timeouts */
+        die("read");
+        return -1;
 }
 
 /* ---------- gap buffer ---------- */
