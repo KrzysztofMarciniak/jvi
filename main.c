@@ -35,7 +35,6 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <termios.h>
-#include <sys/ioctl.h>
 
 #define TABSTOP    8
 #define GAP_CHUNK  256		/* spare bytes added whenever the gap must grow */
@@ -609,6 +608,21 @@ static void clamp_cursor(void)
 	if (pos >= e && e > s) pos = utf8_prev(e);	/* normal mode: stay on a char */
 }
 
+static int query_size(int *r, int *c)
+{
+        static const char q[] = "\033[999;999H\033[6n";
+        char b[32];
+        int i = 0;
+
+        if (write(1, q, sizeof q - 1) < 0) return -1;
+        while (i < (int)sizeof b - 1) {
+                if (read(0, &b[i], 1) != 1) return -1;
+                if (b[i++] == 'R') break;
+        }
+        b[i] = 0;
+        return sscanf(b, "\033[%d;%dR", r, c) == 2 ? 0 : -1;
+}
+
 static void draw(void)
 {
 	struct winsize ws;
@@ -616,10 +630,10 @@ static void draw(void)
 	Pos p, s, n;
 	int y, th, col, cur_row = 0, past_end = 0, w;
 
-	if (ioctl(1, TIOCGWINSZ, &ws) == 0 && ws.ws_row > 2 && ws.ws_col > 0) {
-		rows = ws.ws_row;
-		cols = ws.ws_col;
-	}
+
+	int r, c;
+	if (query_size(&r, &c) == 0 && r > 2 && c > 0) { rows = r; cols = c; }
+
 	clamp_cursor();
 	th = rows - 2;
 	scroll_vertical(th);
