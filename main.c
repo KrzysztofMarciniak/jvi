@@ -612,10 +612,8 @@ static void lines_range(unsigned n, Pos *from, Pos *to)
 }
 
 /* ---------- file io ---------- */
-
-static void load_file(const char *path)
+static void load_file(const char *path, int fd)
 {
-	int fd = open(path, O_RDONLY);
 	Pos size = 0, room = 4096;
 	ssize_t k;
 
@@ -633,7 +631,7 @@ static void load_file(const char *path)
 			gb = xrealloc(gb, GAP_CHUNK + room);
 		}
 	}
-	close(fd);
+	if (fd > 0) close(fd);
 	gb_start = 0;
 	gb_end = GAP_CHUNK;
 	gb_cap = GAP_CHUNK + size;
@@ -1459,11 +1457,17 @@ static void visual_key(int c)
 
 int main(int argc, char **argv)
 {
-	int c;
+	int c, fd;
 
 	if (argc > 1) {
 		str_copy(fname, argv[1], PATH_LEN);
-		load_file(fname);
+		load_file(fname, open(fname, O_RDONLY));
+	} else if (!isatty(0)) {
+		load_file("stdin", 0);
+		fd = open("/dev/tty", O_RDONLY);
+		if (fd < 0) die("cannot open /dev/tty");
+		dup2(fd, 0);
+		close(fd);
 	}
 	term_raw();
 	for (;;) {
